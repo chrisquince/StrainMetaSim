@@ -107,4 +107,13 @@ This will require that you are in directory with NCBI genomes and the file assem
     ```
     The first column in the sample index, followed by taxaid, strainid, coverage, and relative frequency.
     
-7. 
+7. Now we will generate the actual reads basically by running the [ART](https://www.niehs.nih.gov/research/resources/software/biostatistics/art/) read simulator for each strain in each sample separately. We do this through the script
+*SampleGenerate.py* which we run as follows:
+```
+python ./SampleGenerate.py Select_config.json Simulation Simulation/coverage.tsv -n Reads -s 0
+```
+where -s gives the sample index to be generated. This is trivially parallelisable so we run all the samples simultaneously with the following shell script:
+```
+    cp $METASIMPATH/scripts/SampleGenerate.sh .
+    cp $METASIMPATH/scripts/SampleGenerate.py .
+```
