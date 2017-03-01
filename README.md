@@ -23,10 +23,46 @@ This will require that you are in directory with NCBI genomes and the file assem
 3. Extract out species directories:
     ```
         tar -xvzf Strains.tar.gz
+        cd Strains
     ```
 
-4.
+4. You will now have 100 directories one for each species, each of which contains detailed information on the strains available from the NCBI for that strain. 
 
+5. The actual simulation is configured through a json file. Copy that into the Strains directory:
+```
+    cp ../../config/Select_config.json .
+```
+and view it in an editor. The parameters are fairly self explanatory:
+```
+    "reads": {
+        "no_Reads": 12500000,
 
+        "length": 150,
+
+        "insert_length": 300,
+
+        "insert_sd": 10
+    },
+```
+Configures the Illumina paired end reads, the number for each sample, their length, and insert characteristics.
+```  
+
+    "no_Samples" : 96,
+```
+This is the number of samples to generate. 
+
+    "species_dist_Params": {
+        "mean_log_Mean": 1.0,
+
+        "sd_log_Mean": 0.25,
+
+        "k_log_Sd": 1.0,
+
+        "theta_log_Sd": 1.0,
+
+        "beta": 1.0,
+
+        "alpha": 1.0
+    },
 
 
