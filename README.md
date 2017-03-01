@@ -116,4 +116,5 @@ where -s gives the sample index to be generated. This is trivially parallelisabl
 ```
     cp $METASIMPATH/scripts/SampleGenerate.sh .
     cp $METASIMPATH/scripts/SampleGenerate.py .
+    ./SampleGenerate.sh
 ```
