@@ -2,11 +2,13 @@
 
 This repository contains scripts and downloads to data necessary to recreate the `complex strain' in silico mock community from Quince et al "DESMAN: a new tool to decipher strain-level divergence de novo from metagenomes".
 
+The strategy used here (and some of the code) was heavily based on the excellent and far more general [meta-sweeper](https://github.com/cerebis/meta-sweeper) 
+
 1. Lets create a directory for working in and set PATH to scripts:
     ```
         mkdir ComplexStrainSim
         cd ComplexStrainSim
-        export METASIMPATH=/MyPath/StrainMetaSim/scripts
+        export METASIMPATH=/MyPath/StrainMetaSim/
     ```
  
 
@@ -80,3 +82,9 @@ This will require that you are in directory with NCBI genomes and the file assem
     ```
     Then we define the total number of species in the simulation, give their directory names and the number of strains to generate 
     for them.
+
+6. Now we begin by generating the coverages required for each strain:
+    ```
+        python $METASIMPATH/scripts/CoverageGenerate.py Select_config.json Simulation
+    ```
+    Where Simulation is the output directory name which will be created if not present. 
