@@ -87,4 +87,24 @@ This will require that you are in directory with NCBI genomes and the file assem
     ```
         python $METASIMPATH/scripts/CoverageGenerate.py Select_config.json Simulation
     ```
-    Where Simulation is the output directory name which will be created if not present. 
+    Where Simulation is the output directory name which will be created if not present.         This will generate one fasta file named foo.tmp for each strain in the collection, this contains the sequences for that strain. The strains that have been selected for the simulation are detailed in the tab separated *select.tsv* file:
+    ```
+    head -n 5 select.tsv 
+    35814	1247648_0	4	GCF_000598125.1
+    35814	1172205_1	1	GCF_000765395.1
+    35814	1247646_0	4	GCF_000572015.1
+    35814	1266729_0	2	GCF_000341465.1
+    285	399795_0	1	GCF_000168855.1
+    ```
+    This simply gives taxaid strainid no_seqs accession. Then the file coverage.tsv gives the coverage of each strain in each sample:
+    ```
+    head -n 5 coverage.tsv
+    0	663	1219076_0	0.212580070954	0.000583505311272
+    0	2095	1124992_0	0.55214734603	0.000299582781855
+    0	2095	40480_2	0.259023748867	0.000140534958164
+    0	2096	710127_0	3.80894852936e-06	2.05744163762e-09
+    0	2096	1159198_0	3.50903469472e-07	1.78537626634e-10
+    ```
+    The first column in the sample index, followed by taxaid, strainid, coverage, and relative frequency.
+    
+7. 
