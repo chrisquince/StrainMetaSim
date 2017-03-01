@@ -69,6 +69,14 @@ This will require that you are in directory with NCBI genomes and the file assem
     an optional parameter to remove some species from samples entirely and alpha is the parameter for the symmetric 
     Dirichlet used to determine the relative strain frequencies within a species. 
 
+    ```
+        "no_Species" : 100,
 
-
-
+        "species": [
+        {
+            "dir": "Strain_35814/",
+            "nStrains": "4"
+        },
+    ```
+    Then we define the total number of species in the simulation, give their directory names and the number of strains to generate 
+    for them.
