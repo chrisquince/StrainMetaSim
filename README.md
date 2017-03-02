@@ -118,3 +118,76 @@ where -s gives the sample index to be generated. This is trivially parallelisabl
     cp $METASIMPATH/scripts/SampleGenerate.py .
     ./SampleGenerate.sh
 ```
+This will generate 96 paired end samples named Reads.0.r1.fq.gz, Reads.0.r2.fq.gz,...,Reads.95.r1.fq.gz, Reads.95.r2.fq.gz
+
+## Running DESMAN on the complex mock
+
+This assumes that DESMAN and CONCOCT are installed and their paths 
+set to the variables DESMAN and CONCOCT respectively.
+The first step in the analysis is to assemble the reads. 
+
+###Assembly
+
+We assembled the reads using megahit 1.1.1 and default parameters:
+```
+ls Reads/*r1*gz | tr "\n" "," | sed 's/,$//' > r1.csv
+ls Reads/*r2*gz | tr "\n" "," | sed 's/,$//' > r2.csv
+megahit -1 $(<r1.csv) -2 $(<r2.csv) -t 96 -o Assembly > megahit1.out
+```
+
+Then cut up contigs and index for BWA:
+
+```
+cd Assembly
+python ~/Installed/CONCOCT/scripts/cut_up_fasta.py -c 10000 -o 0 -m final.contigs.fa > final_contigs_c10K.fa
+bwa index final_contigs_c10K.fa
+cd ..
+```
+
+Then we map reads onto the contig fragments using BWA-mem:
+```
+mkdir Map
+
+for file in Reads/*.r1.fq.gz
+do
+
+    stub=${file%.r1.fq.gz}
+
+    base=${stub##*/}
+
+    echo $base
+
+    bwa mem -t 96 Assembly/final_contigs_c10K.fa $file ${stub}.r2.fq.gz > Map/$base.sam
+done
+```
+
+And calculate coverages:
+```
+python ~/bin/Lengths.py -i Assembly/final_contigs_c10K.fa | tr " " "\t" > Assembly/Lengths.txt
+
+for file in Map/*.sam
+do
+    stub=${file%.sam}
+    stub2=${stub#Map\/}
+    echo $stub  
+    (samtools view -h -b -S $file > ${stub}.bam; samtools view -b -F 4 ${stub}.bam > ${stub}.mapped.bam; samtools sort -m 1000000000 ${stub}.mapped.bam -o ${stub}.mapped.sorted.bam; bedt
+ools genomecov -
+ibam ${stub}.mapped.sorted.bam -g Assembly/Lengths.txt > ${stub}_cov.txt)&
+done
+```
+
+Collate coverages together:
+
+```
+for i in Map/*_cov.txt 
+do 
+   echo $i
+   stub=${i%_cov.txt}
+   stub=${stub#Map\/}
+   echo $stub
+   awk -F"\t" '{l[$1]=l[$1]+($2 *$3);r[$1]=$4} END {for (i in l){print i","(l[i]/r[i])}}' $i > Map/${stub}_cov.csv&
+done
+```
+
+
+
