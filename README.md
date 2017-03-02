@@ -128,7 +128,7 @@ The first step in the analysis is to assemble the reads.
 
 ###Assembly
 
-We assembled the reads using megahit 1.1.1 and default parameters:
+We assembled the reads using MEGAHIT 1.1.1 and default parameters:
 ```
 ls Reads/*r1*gz | tr "\n" "," | sed 's/,$//' > r1.csv
 ls Reads/*r2*gz | tr "\n" "," | sed 's/,$//' > r2.csv
@@ -187,7 +187,30 @@ do
    echo $stub
    awk -F"\t" '{l[$1]=l[$1]+($2 *$3);r[$1]=$4} END {for (i in l){print i","(l[i]/r[i])}}' $i > Map/${stub}_cov.csv&
 done
+
+$DESMAN/scripts/Collate.pl Map > Coverage.csv
 ```
 
+We are going to use a more efficient development branch of \texttt{CONCOCT}. This can be checked out and installed as follows:
 
+```
+    git clone git@github.com:BinPro/CONCOCT.git
+    git fetch
+    git checkout SpeedUp_Mp
+    sudo python ./setup.py install
+```
 
+Now we can run CONCOCT:
+```
+
+    mkdir Concoct
+
+    mv Coverage.csv Concoct
+
+    cd Concoct
+
+    tr "," "\t" < Coverage.csv > Coverage.tsv
+
+    concoctV --coverage_file Coverage.tsv --composition_file ../Assembly/final_contigs_c10K.fa > concoct.out
+
+```
