@@ -139,7 +139,7 @@ Then cut up contigs and index for BWA:
 
 ```
 cd Assembly
-python ~/Installed/CONCOCT/scripts/cut_up_fasta.py -c 10000 -o 0 -m final.contigs.fa > final_contigs_c10K.fa
+python $CONCOCT/scripts/cut_up_fasta.py -c 10000 -o 0 -m final.contigs.fa > final_contigs_c10K.fa
 bwa index final_contigs_c10K.fa
 cd ..
 ```
@@ -212,5 +212,42 @@ Now we can run CONCOCT:
     tr "," "\t" < Coverage.csv > Coverage.tsv
 
     concoctV --coverage_file Coverage.tsv --composition_file ../Assembly/final_contigs_c10K.fa > concoct.out
+
+```
+
+Find genes using prodigal:
+```
+    mkdir Annotate
+
+    cd Annotate/
+
+    python $DESMAN/scripts/LengthFilter.py ../Assembly/final_contigs_c10K.fa 1000 >     final_contigs_gt1000_c10K.fa
+
+    prodigal -i final_contigs_gt1000_c10K.fa -a final_contigs_gt1000_c10K.faa -d     final_contigs_gt1000_c10K.fna  -f gff -p meta -o final_contigs_gt1000_c10K.gff > p.out
+```
+
+Assign COGs change the -c flag which sets number of parallel processes appropriately:
+```
+    export COGSDB_DIR=/mydatabase_path/rpsblast_db
+    $CONCOCT/scripts/RPSBLAST.sh -f final_contigs_gt1000_c10K.faa -p -c 32 -r 1
+```
+
+
+We are also going to refine the output using single-core gene frequencies. First we calculate scg frequencies on the CONCOCT clusters:
+```
+cd ../Concoct
+python $CONCOCT/scripts/COG_table.py -b ../Annotate/final_contigs_gt1000_c10K.out  -m $CONCOCT/scgs/scg_cogs_min0.97_max1.03_unique_genera.txt -c clustering_gt1000.csv  --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv > clustering_gt1000_scg.tsv
+```
+
+Then we need to manipulate the output file formats slightly:
+```
+sed '1d' clustering_gt1000.csv > clustering_gt1000_R.csv
+cut -f1,3- < clustering_gt1000_scg.tsv | tr "\t" "," > clustering_gt1000_scg.csv
+$CONCOCT/scripts/Sort.pl < clustering_gt1000_scg.csv > clustering_gt1000_scg_sort.csv
+```
+
+Then we can run the refinement step of CONCOCT:
+```
+concoct_refine clustering_gt1000.csv original_data_gt1000.csv clustering_gt1000_scg_sort.csv > concoct_ref.out
 
 ```
