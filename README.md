@@ -126,7 +126,7 @@ This assumes that DESMAN and CONCOCT are installed and their paths
 set to the variables DESMAN and CONCOCT respectively.
 The first step in the analysis is to assemble the reads. 
 
-###Assembly
+### Assembly
 
 We assembled the reads using MEGAHIT 1.1.1 and default parameters:
 ```
@@ -170,9 +170,7 @@ do
     stub=${file%.sam}
     stub2=${stub#Map\/}
     echo $stub  
-    (samtools view -h -b -S $file > ${stub}.bam; samtools view -b -F 4 ${stub}.bam > ${stub}.mapped.bam; samtools sort -m 1000000000 ${stub}.mapped.bam -o ${stub}.mapped.sorted.bam; bedt
-ools genomecov -
-ibam ${stub}.mapped.sorted.bam -g Assembly/Lengths.txt > ${stub}_cov.txt)&
+    (samtools view -h -b -S $file > ${stub}.bam; samtools view -b -F 4 ${stub}.bam > ${stub}.mapped.bam; samtools sort -m 1000000000 ${stub}.mapped.bam -o ${stub}.mapped.sorted.bam; bedtools genomecov - ibam ${stub}.mapped.sorted.bam -g Assembly/Lengths.txt > ${stub}_cov.txt)&
 done
 ```
 
@@ -232,7 +230,6 @@ Assign COGs change the -c flag which sets number of parallel processes appropria
     $CONCOCT/scripts/RPSBLAST.sh -f final_contigs_gt1000_c10K.faa -p -c 32 -r 1
 ```
 
-
 We are also going to refine the output using single-core gene frequencies. First we calculate scg frequencies on the CONCOCT clusters:
 ```
 cd ../Concoct
@@ -249,5 +246,4 @@ $CONCOCT/scripts/Sort.pl < clustering_gt1000_scg.csv > clustering_gt1000_scg_sor
 Then we can run the refinement step of CONCOCT:
 ```
 concoct_refine clustering_gt1000.csv original_data_gt1000.csv clustering_gt1000_scg_sort.csv > concoct_ref.out
-
 ```
