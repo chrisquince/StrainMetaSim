@@ -123,7 +123,14 @@ This will generate 96 paired end samples named Reads.0.r1.fq.gz, Reads.0.r2.fq.g
 ## Running DESMAN on the complex mock
 
 This assumes that DESMAN and CONCOCT are installed and their paths 
-set to the variables DESMAN and CONCOCT respectively.
+set to the variables DESMAN and CONCOCT respectively e.g. (changing paths to your 
+system set-up):
+
+```
+export CONCOCT=~/Installed/CONCOCT/
+export DESMAN=/mnt/gpfs/chris/repos/DESMAN/
+```
+
 The first step in the analysis is to assemble the reads. 
 
 ### Assembly
@@ -189,10 +196,11 @@ done
 $DESMAN/scripts/Collate.pl Map > Coverage.csv
 ```
 
-We are going to use a more efficient development branch of \texttt{CONCOCT}. This can be checked out and installed as follows:
+We are going to use a more efficient development branch of CONCOCT. This can be checked out and installed as follows:
 
 ```
     git clone git@github.com:BinPro/CONCOCT.git
+    cd CONCOCT
     git fetch
     git checkout SpeedUp_Mp
     sudo python ./setup.py install
@@ -209,7 +217,7 @@ Now we can run CONCOCT:
 
     tr "," "\t" < Coverage.csv > Coverage.tsv
 
-    concoctV --coverage_file Coverage.tsv --composition_file ../Assembly/final_contigs_c10K.fa > concoct.out
+    concoct --coverage_file Coverage.tsv --composition_file ../Assembly/final_contigs_c10K.fa > concoct.out
 
 ```
 
@@ -247,3 +255,9 @@ Then we can run the refinement step of CONCOCT:
 ```
 concoct_refine clustering_gt1000.csv original_data_gt1000.csv clustering_gt1000_scg_sort.csv > concoct_ref.out
 ```
+
+This should result in XXX clusters with 75% single copy copy SCGs:
+```
+python $CONCOCT/scripts/COG_table.py -b ../Annotate/final_contigs_gt1000_c10K.out  -m $CONCOCT/scgs/scg_cogs_min0.97_max1.03_unique_genera.txt -c cluster_refine.csv  --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv > clustering_gt1000_scg.tsv
+```
+
