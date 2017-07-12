@@ -217,17 +217,19 @@ Now we can run CONCOCT:
 
     tr "," "\t" < Coverage.csv > Coverage.tsv
 
-    concoct --coverage_file Coverage.tsv --composition_file ../Assembly/final_contigs_c10K.fa > concoct.out
+    concoct --coverage_file Coverage.tsv --composition_file ../Assembly/final_contigs_c10K.fa -t 96 > concoct.out
 
 ```
 
 Find genes using prodigal:
 ```
+    cd ..
+    
     mkdir Annotate
 
     cd Annotate/
 
-    python $DESMAN/scripts/LengthFilter.py ../Assembly/final_contigs_c10K.fa 1000 >     final_contigs_gt1000_c10K.fa
+    python $DESMAN/scripts/LengthFilter.py ../Assembly/final_contigs_c10K.fa -m 1000 >     final_contigs_gt1000_c10K.fa
 
     prodigal -i final_contigs_gt1000_c10K.fa -a final_contigs_gt1000_c10K.faa -d     final_contigs_gt1000_c10K.fna  -f gff -p meta -o final_contigs_gt1000_c10K.gff > p.out
 ```
