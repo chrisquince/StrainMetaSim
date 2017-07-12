@@ -120,6 +120,13 @@ where -s gives the sample index to be generated. This is trivially parallelisabl
 ```
 This will generate 96 paired end samples named Reads.0.r1.fq.gz, Reads.0.r2.fq.gz,...,Reads.95.r1.fq.gz, Reads.95.r2.fq.gz
 
+### Downloading reads
+
+If you cannot get the above simulation to work or just want to go ahead with the DESMAN 
+then all the reads are downloadable from the URLs contained in this file [read urls](Results/complexmock.txt)
+
+
+
 ## Running DESMAN on the complex mock
 
 This assumes that DESMAN and CONCOCT are installed and their paths 
