@@ -158,6 +158,8 @@ bwa index final_contigs_c10K.fa
 cd ..
 ```
 
+### Mapping
+
 Then we map reads onto the contig fragments using BWA-mem:
 ```
 mkdir Map
@@ -202,6 +204,8 @@ done
 
 $DESMAN/scripts/Collate.pl Map > Coverage.csv
 ```
+
+### Binning
 
 We are going to use a more efficient development branch of CONCOCT. This can be checked out and installed as follows:
 
@@ -262,11 +266,53 @@ $CONCOCT/scripts/Sort.pl < clustering_gt1000_scg.csv > clustering_gt1000_scg_sor
 
 Then we can run the refinement step of CONCOCT:
 ```
-concoct_refine clustering_gt1000.csv original_data_gt1000.csv clustering_gt1000_scg_sort.csv > concoct_ref.out
+concoct_refine clustering_gt1000_R.csv original_data_gt1000.csv clustering_gt1000_scg_sort.csv > concoct_ref.out
 ```
 
-This should result in XXX clusters with 75% single copy copy SCGs:
+This should result in 70-75 clusters with 75% single copy copy SCGs:
 ```
-python $CONCOCT/scripts/COG_table.py -b ../Annotate/final_contigs_gt1000_c10K.out  -m $CONCOCT/scgs/scg_cogs_min0.97_max1.03_unique_genera.txt -c cluster_refine.csv  --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv > clustering_gt1000_scg.tsv
+python $CONCOCT/scripts/COG_table.py -b ../Annotate/final_contigs_gt1000_c10K.out  -m $CONCOCT/scgs/scg_cogs_min0.97_max1.03_unique_genera.txt -c clustering_refine.csv  --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv > clustering_refine_scg.tsv
 ```
 
+### Get nucleotide frequencies on target bins
+
+For this part of the analysis we will require an additional github repository of scripts
+[MAGAnalysis](https://github.com/chrisquince/MAGAnalysis). Install as follows but into 
+you own repositories directory:
+```
+cd /mnt/gpfs/chris/repos/
+git clone https://github.com/chrisquince/MAGAnalysis
+cd $COMPLEXSIM
+```  
+
+Return to the analysis directory and create a new directory to bin the contigs into:
+
+```
+cd ..
+mkdir Split
+$DESMAN/scripts/SplitClusters.pl ../Annotate/final_contigs_gt1000_c10K.fa ../Concoct/clustering_refine.csv
+cd ..
+```
+
+> scg_ref <- read.table("clustering_refine_scg.tsv",header=TRUE,row.names=1)
+> scg_ref <- scg_ref[,-1]
+> scg_ref <- scg_ref[,-1]
+> scg_75 <- scg_ref[rowSums(scg_ref==1)/36 > 0.75,]
+> write.csv(scg_75,"scg_75.csv",quote=FALSE)
+
+cut -f1 -d"," scg_75.csv | sed 's/^/Cluster/' | sed '1d' > Cluster75.txt
+
+
+export MAGAnalysis=/mnt/gpfs/chris/repos/MAGAnalysis/
+
+python $MAGAnalysis/scripts/ExtractCogsNative.py -b final_contigs_gt1000_c10K.out --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv > final_contigs_gt1000_c10K.cogs
+
+$MAGAnalysis/scripts/SplitCOGs.pl ../Annotate/final_contigs_gt1000_c10K.cogs ../Concoct/clustering_refine.csv
+
+#!/bin/bash
+
+while read -r cluster 
+do
+    echo $cluster
+    $DESMAN/scripts/SelectContigsPos.pl cogs.txt < Split/${cluster}/${cluster}.cog > Split/${cluster}/${cluster}_core.cogs
+done < Concoct/Cluster75.txt
