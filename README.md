@@ -120,12 +120,36 @@ where -s gives the sample index to be generated. This is trivially parallelisabl
 ```
 This will generate 96 paired end samples named Reads.0.r1.fq.gz, Reads.0.r2.fq.gz,...,Reads.95.r1.fq.gz, Reads.95.r2.fq.gz
 
-### Downloading reads
+We will move these into a separate reads directory along with genomes:
+```
+mkdir Reads
+mv Reads*gz Reads
+mkdir Genomes
+mv *tmp Genomes
+```
+
+### Downloading reads (alternative step to above)
 
 If you cannot get the above simulation to work or just want to go ahead with the DESMAN 
-then all the reads are downloadable from the URLs contained in this file [read urls](Results/complexmock.txt)
+example then all the reads are downloadable from the URLs contained in this file [read urls](Results/complexmock.txt). Create a directory structure as above if you have not already i.e. starting from the repo dir: 
+```
+cd  $METASIMPATH
+mkdir -p ComplexStrainSim/Strains/Simulation
+cd ComplexStrainSim/Strains/Simulation
+```
 
+Now download reads:
+```
+mkdir Reads
+cd Reads
+while read line
+do
+    wget $line
+done < $METASIMPATH/Results/complexmock.txt
+cd ..
+```
 
+You can then proceed with the rest of the analysis below.
 
 ## Running DESMAN on the complex mock
 
@@ -134,8 +158,13 @@ set to the variables DESMAN and CONCOCT respectively e.g. (changing paths to you
 system set-up):
 
 ```
-export CONCOCT=~/Installed/CONCOCT/
+export CONCOCT=/mnt/gpfs/chris/repos/CONCOCT/
 export DESMAN=/mnt/gpfs/chris/repos/DESMAN/
+```
+
+We will also create a new variable pointing to our current working dir for all this analysis:
+```
+export METASIMPATHWD=$METASIMPATH/ComplexStrainSim/Strains/Simulation
 ```
 
 The first step in the analysis is to assemble the reads. 
@@ -282,32 +311,70 @@ you own repositories directory:
 ```
 cd /mnt/gpfs/chris/repos/
 git clone https://github.com/chrisquince/MAGAnalysis
-cd $COMPLEXSIM
+cd $COMPLEXSIMWD
+export MAGANALYSIS=/mnt/gpfs/chris/repos/MAGAnalysis
 ```  
 
-Return to the analysis directory and create a new directory to bin the contigs into:
-
+Now we assign COGs to contigs using one of these scripts:
 ```
+cd $COMPLEXSIMWD/Annotate
+python $MAGANALYSIS/scripts/ExtractCogsNative.py -b final_contigs_gt1000_c10K.out --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv > final_contigs_gt1000_c10K.cogs
 cd ..
+```
+
+Return to the analysis directory and create a new directory to bin the contigs into:
+```
+cd $COMPLEXSIMWD
 mkdir Split
 $DESMAN/scripts/SplitClusters.pl ../Annotate/final_contigs_gt1000_c10K.fa ../Concoct/clustering_refine.csv
+$MAGANALYSIS/scripts/SplitCOGs.pl ../Annotate/final_contigs_gt1000_c10K.cogs ../Concoct/clustering_refine.csv
 cd ..
 ```
 
+Now we want to select those clusters that have 75% of SCGs in single copy using R:
+```
+cd Concoct
+R
+```
+
+Then run these R commands:
+```
 > scg_ref <- read.table("clustering_refine_scg.tsv",header=TRUE,row.names=1)
 > scg_ref <- scg_ref[,-1]
 > scg_ref <- scg_ref[,-1]
 > scg_75 <- scg_ref[rowSums(scg_ref==1)/36 > 0.75,]
 > write.csv(scg_75,"scg_75.csv",quote=FALSE)
+> q()
+```
 
+Back in bash:
+```
 cut -f1 -d"," scg_75.csv | sed 's/^/Cluster/' | sed '1d' > Cluster75.txt
+cd ..
+```
 
+Now we can split up bam files by each cluster in turn:
+```
+mkdir SplitBam
 
-export MAGAnalysis=/mnt/gpfs/chris/repos/MAGAnalysis/
+while read -r cluster 
+do
+    grep ">" Split/${cluster}/${cluster}.fa | sed 's/>//g' > Split/${cluster}/${cluster}_contigs.txt
+    $MAGANALYSIS/scripts/AddLengths.pl Annotate/final_contigs_gt1000_c10K.len < Split/${cluster}/${cluster}_contigs.txt > Split/${cluster}/${cluster}_contigs.tsv
+    mkdir SplitBam/${cluster}
 
-python $MAGAnalysis/scripts/ExtractCogsNative.py -b final_contigs_gt1000_c10K.out --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv > final_contigs_gt1000_c10K.cogs
+    for bamfile in Map/*.mapped.sorted.bam
+    do
+        stub=${bamfile#Map\/}
+        stub=${stub%.mapped.sorted.bam}
+        
+        samtools view -bhL Split/${cluster}/${cluster}_contigs.tsv $bamfile > SplitBam/${cluster}/${stub}_Filter.bam&
 
-$MAGAnalysis/scripts/SplitCOGs.pl ../Annotate/final_contigs_gt1000_c10K.cogs ../Concoct/clustering_refine.csv
+    done 
+    wait    
+done < Concoct/Cluster75.txt 
+```
+
 
 #!/bin/bash
 
