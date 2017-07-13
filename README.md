@@ -318,7 +318,7 @@ export MAGANALYSIS=/mnt/gpfs/chris/repos/MAGAnalysis
 Now we assign COGs to contigs using one of these scripts:
 ```
 cd $COMPLEXSIMWD/Annotate
-python $MAGANALYSIS/scripts/ExtractCogsNative.py -b final_contigs_gt1000_c10K.out --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv > final_contigs_gt1000_c10K.cogs
+python $DESMAN/scripts/ExtractCogs.py -b final_contigs_gt1000_c10K.out --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv -g final_contigs_gt1000_c10K.gff > final_contigs_gt1000_c10K.cogs
 cd ..
 ```
 
@@ -327,7 +327,7 @@ Return to the analysis directory and create a new directory to bin the contigs i
 cd $COMPLEXSIMWD
 mkdir Split
 $DESMAN/scripts/SplitClusters.pl ../Annotate/final_contigs_gt1000_c10K.fa ../Concoct/clustering_refine.csv
-$MAGANALYSIS/scripts/SplitCOGs.pl ../Annotate/final_contigs_gt1000_c10K.cogs ../Concoct/clustering_refine.csv
+$METASIMPATH/scripts/SplitCOGs.pl ../Annotate/final_contigs_gt1000_c10K.cogs ../Concoct/clustering_refine.csv
 cd ..
 ```
 
@@ -360,7 +360,7 @@ mkdir SplitBam
 while read -r cluster 
 do
     grep ">" Split/${cluster}/${cluster}.fa | sed 's/>//g' > Split/${cluster}/${cluster}_contigs.txt
-    $MAGANALYSIS/scripts/AddLengths.pl Annotate/final_contigs_gt1000_c10K.len < Split/${cluster}/${cluster}_contigs.txt > Split/${cluster}/${cluster}_contigs.tsv
+    $METASIMPATH/scripts/AddLengths.pl Annotate/final_contigs_gt1000_c10K.len < Split/${cluster}/${cluster}_contigs.txt > Split/${cluster}/${cluster}_contigs.tsv
     mkdir SplitBam/${cluster}
 
     for bamfile in Map/*.mapped.sorted.bam
@@ -375,11 +375,63 @@ do
 done < Concoct/Cluster75.txt 
 ```
 
+and run bam-readcount:
+```
+while read line
+do
+    mag=$line
 
-#!/bin/bash
+    echo $mag
 
+    cd SplitBam
+    cd ${mag}
+
+    cp ../../Split/${mag}/${mag}_contigs.tsv ${mag}_contigs.tsv
+    samtools faidx ../../Split/${mag}/${mag}.fa
+
+    echo "${mag}_contigs.tsv"
+    mkdir ReadcountFilter
+    for bamfile in *_Filter.bam
+    do
+        stub=${bamfile%_Filter.bam}
+            
+        echo $stub
+
+        (samtools index $bamfile; bam-readcount -w 1 -q 20 -l "${mag}_contigs.tsv" -f ../../Split/${mag}/${mag}.fa $bamfile 2> ReadcountFilter/${stub}.err > ReadcountFilter/${stub}.cnt)&
+    
+     done
+     cd ..
+     cd ..
+     wait
+    
+done < Concoct/Cluster75.txt
+
+```
+
+Then we want to select core cogs from each cluster
+
+```
 while read -r cluster 
 do
     echo $cluster
-    $DESMAN/scripts/SelectContigsPos.pl cogs.txt < Split/${cluster}/${cluster}.cog > Split/${cluster}/${cluster}_core.cogs
+    $DESMAN/scripts/SelectContigsPos.pl $METASIMPATH/config/cogs.txt < Split/${cluster}/${cluster}.cog > Split/${cluster}/${cluster}_core.cogs
 done < Concoct/Cluster75.txt
+```
+
+Then we can get the base counts on these core cogs:
+
+```
+#!/bin/bash
+
+mkdir Variants
+while read -r cluster 
+do
+    echo $cluster
+    cd ./SplitBam/${cluster}/ReadcountFilter
+    gzip *cnt
+    cd ../../..
+    python $DESMAN/scripts/ExtractCountFreqGenes.py Split/${cluster}/${cluster}_core.cogs ./SplitBam/${cluster}/ReadcountFilter --output_file Variants/${cluster}_scg.freq > Variants/${cluster}log.txt&
+
+done < Concoct/Cluster75.txt 
+``` 
+
