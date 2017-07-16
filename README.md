@@ -435,3 +435,65 @@ do
 done < Concoct/Cluster75.txt 
 ``` 
 
+### Variant detection
+
+The first step of DESMAN is to find variant positions on the single-copy core genes. This is done using the Variant_Filter.py script. We run this for each cluster in parallel below adapt this to your machines capabilities:
+
+```
+cd $COMPLEXSIMWD
+
+mkdir SCG_Analysis
+
+for file in ./Variants/*.freq
+do
+    stub=${file%.freq}
+    stub=${stub#./Variants\/}
+
+    echo $stub
+    mkdir SCG_Analysis/$stub
+    
+    cp $file SCG_Analysis/$stub
+    cd SCG_Analysis/$stub    
+
+    python $DESMAN/desman/Variant_Filter.py ${stub}.freq -p -o $stub -m 1.0 -f 25.0 -c -sf 0.80 -t 2.5 > ${stub}.vout&
+    
+    cd ../..
+done
+```
+-p -o $stub -m 1.0 -f 25.0 -c -sf 0.80 -t 2.5
+The parameters passed to Variant_Filter.py above are:
+1. *-p*: Use 1d optimisation for minor variant frequency, slower but more sensitive 
+2. *-o $stub*: Output file stub name 
+3. *-m 1.0*: 
+4. *-f 25.0*: Cut-off for initial variant filtering
+5. *-c*: Filter genes/COGs by median coverage
+6. *-sf 0.80*: Fraction of samples *i.e.* 80% that need to pass coverage filter for gene to be **not** filtered
+7. *-t 2.5*: Coverage divergence from median for COG to be filtered
+
+### Resolve haplotypes on core genes
+
+#!/bin/bash
+
+for dir in Cluster*/ 
+do
+    cd $dir
+    echo $dir
+    stub=${dir%\/}
+    echo $stub    
+    varFile=${stub}sel_var.csv
+
+    eFile=${stub}tran_df.csv
+    
+
+    for g in 1 2 3 4 5 6 7 
+    do
+        for r in 0 1 2 3 4 5 6 7 8 9
+            do
+            echo $g
+                (desman $varFile -e $eFile -o ${stub}_${g}_${r} -g $g -s $r -m 1.0 > ${stub}_${g}_${r}.out)&
+            done
+    done
+
+    wait
+    cd ..
+done
