@@ -460,18 +460,20 @@ do
     cd ../..
 done
 ```
--p -o $stub -m 1.0 -f 25.0 -c -sf 0.80 -t 2.5
+
 The parameters passed to Variant_Filter.py above are:
-1. *-p*: Use 1d optimisation for minor variant frequency, slower but more sensitive 
-2. *-o $stub*: Output file stub name 
-3. *-m 1.0*: 
-4. *-f 25.0*: Cut-off for initial variant filtering
-5. *-c*: Filter genes/COGs by median coverage
-6. *-sf 0.80*: Fraction of samples *i.e.* 80% that need to pass coverage filter for gene to be **not** filtered
-7. *-t 2.5*: Coverage divergence from median for COG to be filtered
+1. *-p* : Use 1d optimisation for minor variant frequency, slower but more sensitive 
+2. *-o $stub* : Output file stub name 
+3. *-m 1.0* : Minimum coverage for a sample not to be filtered
+4. *-f 25.0* : Cut-off for initial variant filtering
+5. *-c* : Filter genes/COGs by median coverage
+6. *-sf 0.80* : Fraction of samples *i.e.* 80% that need to pass coverage filter for gene to be **not** filtered
+7. *-t 2.5* : Coverage divergence from median for COG to be filtered
 
 ### Resolve haplotypes on core genes
 
+We use the positions identified as variants above for the haplotype inference. The script below will run desman for each cluster in turn, for between 1 and 7 haplotypes for 10 different replicates. It then pauses, so this code will use 70 threads at a time, adjust as is appropriate for your computing environment:
+```
 #!/bin/bash
 
 for dir in Cluster*/ 
@@ -497,3 +499,4 @@ do
     wait
     cd ..
 done
+```
