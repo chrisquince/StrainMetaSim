@@ -504,6 +504,8 @@ done
 ```
 
 
+# Validation of results
+
 ## Assign contigs to genomes
 
 First we need to index the sorted per sample bam files:
@@ -530,6 +532,21 @@ cd AssignContigs
 python ./contig_read_count_per_genome.py ../Assembly/final_contigs_c10K.fa AllGenomes.fasta ../Map/*mapped.sorted.bam > final_contigs_c10K_counts.tsv
 ```
 This make take while so run in the background with screen etc.
+
+## Assign genes to genomes
+
+```
+mkdir AssignGenes
+
+cut -d"," -f1 < ../SCG_AnalysisF/CompareTau10.txt > ClusterV.txt
+
+./CatGenes.sh > AllV.genes
+
+sed 's/>\(\S\+\)\s.*$/>\1/' ../AssignContigs/AllGenomes.fasta > AllGenomesR.fasta
+
+nohup python ./gene_read_count_per_genome.py AllV.genes AllGenomesR.fasta ../Map/*mapped.sorted.bam > AllV_counts.tsv&
+```
+
 ## Detect variants on all genes
 
 
