@@ -149,6 +149,14 @@ done < $METASIMPATH/Results/complexmock.txt
 cd ..
 ```
 
+You will also need the genomes and parameter files for the simulation:
+```
+wget https://complexmock.s3.climb.ac.uk/Genomes.tar.gz
+tar -xvzf Genomes.tar.gz
+wget https://complexmock.s3.climb.ac.uk/select.tsv
+wget https://complexmock.s3.climb.ac.uk/coverage.tsv
+```
+
 You can then proceed with the rest of the analysis below.
 
 ## Running DESMAN on the complex mock
@@ -520,7 +528,7 @@ do
 done
 ```
 
-Make a directory
+Make a directory and concatenate the individual genome sequences into a single file:
 
 ```
 mkdir AssignContigs
@@ -528,8 +536,10 @@ cd AssignContigs
  cat ../Genomes/*tmp > AllGenomes.fasta
 ```
 
+Then we run a slightly adjusted version of the contig_read_count_per_genome script from the DESMAN main repo:
+
 ```
-python ./contig_read_count_per_genome.py ../Assembly/final_contigs_c10K.fa AllGenomes.fasta ../Map/*mapped.sorted.bam > final_contigs_c10K_counts.tsv
+python $COMPLEXSIM/scripts/contig_read_count_per_genomeM.py ../Assembly/final_contigs_c10K.fa AllGenomes.fasta ../Map/*mapped.sorted.bam > final_contigs_c10K_counts.tsv
 ```
 This make take while so run in the background with screen etc.
 
