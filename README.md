@@ -541,7 +541,25 @@ Then we run a slightly adjusted version of the contig_read_count_per_genome scri
 ```
 python $COMPLEXSIM/scripts/contig_read_count_per_genomeM.py ../Assembly/final_contigs_c10K.fa AllGenomes.fasta ../Map/*mapped.sorted.bam > final_contigs_c10K_counts.tsv
 ```
+
 This make take while so run in the background with screen etc.
+
+```
+python ./MapCounts.py ../Genomes ../select.tsv final_contigs_c10K_counts.tsv
+$COMPLEXSIM/scripts/Filter.pl < Species.csv > Contig_Species.csv
+$COMPLEXSIM/scripts/Filter.pl < Strain.csv > Contig_Strains.csv 
+```
+
+Can now look at accuracy of CONCOCT clustering against species assignments:
+```
+$CONCOCT/scripts/Validate.pl --cfile=../Concoct/clustering_refine.csv --sfile=Contig_Species.csv --ffile=../Annotate/final_contigs_gt1000_c10K.fa
+```
+
+The result should look something like:
+```
+N	M	TL	S	K	Rec.	Prec.	NMI	Rand	AdjRand
+74518	74485	4.0917e+08	100	144	0.848982	0.971654	0.956139	0.994957	0.812190
+```
 
 ## Assign genes to genomes
 
