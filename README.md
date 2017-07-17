@@ -315,10 +315,11 @@ cd $COMPLEXSIMWD
 export MAGANALYSIS=/mnt/gpfs/chris/repos/MAGAnalysis
 ```  
 
-Now we assign COGs to contigs using one of these scripts:
+Now we assign COGs and genes to contigs using one of these scripts:
 ```
 cd $COMPLEXSIMWD/Annotate
 python $DESMAN/scripts/ExtractCogs.py -b final_contigs_gt1000_c10K.out --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv -g final_contigs_gt1000_c10K.gff > final_contigs_gt1000_c10K.cogs
+python /mnt/gpfs/chris/repos/DESMAN/scripts/ExtractGenes.py -g final_contigs_gt1000_c10K.gff > final_contigs_gt1000_c10K.genes
 cd ..
 ```
 
@@ -328,6 +329,7 @@ cd $COMPLEXSIMWD
 mkdir Split
 $DESMAN/scripts/SplitClusters.pl ../Annotate/final_contigs_gt1000_c10K.fa ../Concoct/clustering_refine.csv
 $METASIMPATH/scripts/SplitCOGs.pl ../Annotate/final_contigs_gt1000_c10K.cogs ../Concoct/clustering_refine.csv
+$METASIMPATH/scripts/SplitGenes.pl ../Annotate/final_contigs_gt1000_c10K.genes ../Concoct/clustering_refine.csv
 cd ..
 ```
 
@@ -497,6 +499,69 @@ do
     done
 
     wait
+    cd ..
+done
+```
+
+
+## Assign contigs to genomes
+
+First we need to index the sorted per sample bam files:
+```
+cd $COMPLEXSIMWD
+for file in Map/*mapped.sorted.bam
+do     
+    stub=${file%.bam}     
+    stub2=${stub#Map\/}     
+    echo $stub     
+    samtools index $file 
+done
+```
+
+Make a directory
+
+```
+mkdir AssignContigs
+cd AssignContigs
+ cat ../Genomes/*tmp > AllGenomes.fasta
+```
+
+```
+python ./contig_read_count_per_genome.py ../Assembly/final_contigs_c10K.fa AllGenomes.fasta ../Map/*mapped.sorted.bam > final_contigs_c10K_counts.tsv
+```
+This make take while so run in the background with screen etc.
+## Detect variants on all genes
+
+
+Get base frequencies at all positions, in all clusters with 75% of SCGs in single-copies:
+```
+mkdir AllFreq
+while read -r cluster 
+do
+    echo $cluster
+
+    python $DESMAN/scripts/ExtractCountFreqGenes.py -g Split/${cluster}/${cluster}.genes ./SplitBam/${cluster}/ReadcountFilter --output_file AllFreq/${cluster}.freq > AllFreq/${cluster}log.txt&
+
+done < Concoct/Cluster75.txt
+```
+
+Run variant detection across all genes for all clusters:
+```
+cd AllFreq
+
+for file in *.freq
+do
+    stub=${file%.freq}
+    #stub=${stub#./Variants\/}
+#Variants/Cluster32_scg.freq
+    echo $stub
+    mkdir ${stub}
+    
+    cp $file ${stub}
+    cd ${stub}    
+
+    python $DESMAN/desman/Variant_Filter.py ${stub}.freq -o ${stub} -m 1. -f 25.0 -p > ${stub}.vout&
+    
     cd ..
 done
 ```
