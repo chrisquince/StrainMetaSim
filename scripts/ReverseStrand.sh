@@ -16,7 +16,7 @@ do
                 cluster=${basename%_core.cogs}
                 cp -r Select_SCGs Select_SCGs_${cluster}
                 ../ReverseStrand.pl $cogFile Select_SCGs_${cluster}
-                ../TauFastaC.pl Select_SCGs_${cluster}
+                ../TauFasta.pl Select_SCGs_${cluster}
  
                 ../CombineTau.pl Select_SCGs_${cluster} > ${cluster}_core_tau.csv
                 ../MapCogBack.pl $cogFile < ${cluster}_core_tau.csv > ${cluster}_core_tau_map.csv 
