@@ -561,6 +561,44 @@ N	M	TL	S	K	Rec.	Prec.	NMI	Rand	AdjRand
 74518	74485	4.0917e+08	100	144	0.848982	0.971654	0.956139	0.994957	0.812190
 ```
 
+Now use R to map clusters on species:
+```
+R
+```
+Run the following R comands:
+```
+>Conf <- read.csv("Conf.csv",header=TRUE,row.names=1)
+>Conf <- t(Conf)
+>scg <- read.table("../Concoct/clustering_refine_scg.tsv",header=TRUE,row.name=1)
+>scg <- scg[,-1]
+>scg <- scg[,-1]
+>rownames(scg) <- gsub("^","D",rownames(scg))
+>ConfR <- Conf[rownames(scg),]
+>Conf75 <- ConfR[rowSums(scg==1)/36 > 0.75,]
+>Conf75P <- Conf75/rowSums(Conf75)
+>clust_species <- cbind.data.frame(Species=colnames(Conf75P)[apply(Conf75P,1,which.max)],F=apply(Conf75P, 1, max))
+>write.csv(clust_species,"clust_species.csv",quote=FALSE)
+>q()
+```
+
+```
+cut -f1 < Simulation/select.tsv | sort | uniq -c | sed 's/^[ \t]*//;s/[ \t]*$//' | awk '{ print $2 " " $1}' | tr " " "," > StrainCount.csv
+```
+
+```
+cp clust_species.csv ../..
+cd ../..
+cut -f1,2 -d"," clust_species.csv | sed 's/D/Cluster/' > ClusterSpecies.txt
+```
+
+```
+./CopyCogs.sh
+```
+
+```
+./ReverseStrand.sh 
+```
+
 ## Assign genes to genomes
 
 ```
