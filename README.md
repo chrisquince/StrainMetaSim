@@ -533,7 +533,7 @@ Make a directory and concatenate the individual genome sequences into a single f
 ```
 mkdir AssignContigs
 cd AssignContigs
- cat ../Genomes/*tmp > AllGenomes.fasta
+cat ../Genomes/*tmp > AllGenomes.fasta
 ```
 
 Then we run a slightly adjusted version of the contig_read_count_per_genome script from the DESMAN main repo:
@@ -542,7 +542,7 @@ Then we run a slightly adjusted version of the contig_read_count_per_genome scri
 python $COMPLEXSIM/scripts/contig_read_count_per_genomeM.py ../Assembly/final_contigs_c10K.fa AllGenomes.fasta ../Map/*mapped.sorted.bam > final_contigs_c10K_counts.tsv
 ```
 
-This make take while so run in the background with screen etc.
+This make take while so run in the background with screen etc. We then process this file to compute for each contig the species and strain the majority of reads derive from.
 
 ```
 python ./MapCounts.py ../Genomes ../select.tsv final_contigs_c10K_counts.tsv
@@ -561,7 +561,7 @@ N	M	TL	S	K	Rec.	Prec.	NMI	Rand	AdjRand
 74518	74485	4.0917e+08	100	144	0.848982	0.971654	0.956139	0.994957	0.812190
 ```
 
-Now use R to map clusters on species:
+Now use R to map clusters onto species:
 ```
 R
 ```
@@ -581,23 +581,32 @@ Run the following R comands:
 >q()
 ```
 
+We are now going to create for each species that maps onto a cluster what the expected variants should be from the genomes themselves. We move to the directory two up in the hierarchy *../StrainMetaSim/ComplexStrainSim/Strains*:
+
 ```
+cd ../..
 cut -f1 < Simulation/select.tsv | sort | uniq -c | sed 's/^[ \t]*//;s/[ \t]*$//' | awk '{ print $2 " " $1}' | tr " " "," > StrainCount.csv
 ```
 
+and count number of strains in each species. Then we copy the mapping file and reformat it:
+
 ```
-cp clust_species.csv ../..
-cd ../..
+cp Simulation/AssignContigs/clust_species.csv .
 cut -f1,2 -d"," clust_species.csv | sed 's/D/Cluster/' > ClusterSpecies.txt
 ```
 
+Now we copy in the core cog files from each cluster to the correct species and use these we run a script to find the true variants on these cogs:
+
 ```
-./CopyCogs.sh
+$METASIMPATH/scripts/CopyCogs.sh
+$METASIMPATH/scripts/ReverseStrand.sh
+```
+
+Then we run some additional cleaning scripts, removing cogs that have been filtered at the median coverage step and testing that strains are indeed different:
 ```
 
 ```
-./ReverseStrand.sh 
-```
+
 
 ## Assign genes to genomes
 
