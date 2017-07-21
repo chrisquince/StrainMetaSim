@@ -161,7 +161,8 @@ You can then proceed with the rest of the analysis below.
 
 ## Running DESMAN on the complex mock
 
-This assumes that DESMAN and CONCOCT are installed and their paths 
+We now describe how to perform a complete analysis binning and resolving strains on 
+this synthetic community. Some of these steps are time consuming so we provide the option to download the output instead. This assumes that DESMAN and CONCOCT are installed and their paths 
 set to the variables DESMAN and CONCOCT respectively e.g. (changing paths to your 
 system set-up):
 
@@ -310,6 +311,15 @@ This should result in 70-75 clusters with 75% single copy copy SCGs:
 ```
 python $CONCOCT/scripts/COG_table.py -b ../Annotate/final_contigs_gt1000_c10K.out  -m $CONCOCT/scgs/scg_cogs_min0.97_max1.03_unique_genera.txt -c clustering_refine.csv  --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv > clustering_refine_scg.tsv
 ```
+
+If the above fails or time prevents you from then the CONCOCT results can be downloaded directly:
+
+```
+wget https://complexmockresults.s3.climb.ac.uk/Concoct_Res.tar.gz
+tar -xvzf Concoct_Res.tar.gz 
+mv Concoct_Res Concoct
+```
+
 
 ### Get nucleotide frequencies on target bins
 
@@ -604,9 +614,17 @@ $METASIMPATH/scripts/ReverseStrand.sh
 
 Then we run some additional cleaning scripts, removing cogs that have been filtered at the median coverage step and testing that strains are indeed different:
 ```
-
+$METASIMPATH/FilterTau.sh
+$METASIMPATH/Degenerate.sh
 ```
 
+Then we can move back to the DESMAN scg results directory and compare the predicted variants for each cluster with the references:
+```
+cp ClusterSpecies.txt $METASIMPATHWD/SCG_Analysis
+cd $METASIMPATHWD/SCG_Analysis
+sed -i '1d' ClusterSpecies.txt
+$METASIMPATH/scripts/VarResults.sh > VarResults.csv
+```
 
 ## Assign genes to genomes
 
