@@ -455,6 +455,13 @@ do
 done < Concoct/Cluster75.txt 
 ``` 
 
+The results of all the above analysis the nucleotide frequencies on core genes in each cluster can be downloaded if the above fails and you can proceed to the variant detection:
+
+```
+wget https://complexmockresults.s3.climb.ac.uk/Variants.tar.gz
+tar -xvzf Variants.tar.gz
+```
+
 ### Variant detection
 
 The first step of DESMAN is to find variant positions on the single-copy core genes. This is done using the Variant_Filter.py script. We run this for each cluster in parallel below adapt this to your machines capabilities:
