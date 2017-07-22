@@ -528,8 +528,15 @@ do
 done
 ```
 
+If you fail to run the above variant detection and haplotype resolution then the 
+results can be downloaded from here:
 
-# Validation of results
+```
+wget https://complexmockresults.s3.climb.ac.uk/SCG_Analysis.tar.gz
+tar -xvzf SCG_Analysis.tar.gz
+```
+
+# Validation of variant and haplotype detection results
 
 ## Assign contigs to genomes
 
