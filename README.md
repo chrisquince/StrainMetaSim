@@ -196,6 +196,12 @@ bwa index final_contigs_c10K.fa
 cd ..
 ```
 
+If you do not have time to run the assembly the results can be downloaded here:
+```
+wget https://complexmockresults.s3.climb.ac.uk/Assembly.tar.gz
+tar -xvzf Assembly.tar.gz
+```
+
 ### Mapping
 
 Then we map reads onto the contig fragments using BWA-mem:
@@ -605,6 +611,12 @@ Run the following R comands:
 >q()
 ```
 
+The above processing can also be downloaded to save time:
+```
+wget https://complexmockresults.s3.climb.ac.uk/SCG_Analysis.tar.gz
+tar -xvzf SCG_Analysis.tar.gz
+```
+
 We are now going to create for each species that maps onto a cluster what the expected variants should be from the genomes themselves. We move to the directory two up in the hierarchy *../StrainMetaSim/ComplexStrainSim/Strains*:
 
 ```
@@ -639,6 +651,36 @@ cd $METASIMPATHWD/SCG_Analysis
 sed -i '1d' ClusterSpecies.txt
 $METASIMPATH/scripts/VarResults.sh > VarResults.csv
 ```
+The above file gives the number of variants that should have been and were detected in each cluster given its mapping to a reference species:
+```
+NV,Cluster0,1613,0
+NV,Cluster107,28025,0
+Cluster108,1744,55,65,57,0.846153846154,0.964912280702
+NV,Cluster109,316,3
+NV,Cluster111,168695,3
+Cluster112,1681,134,169,146,0.792899408284,0.917808219178
+NV,Cluster116,366648,0
+NV,Cluster117,1718,0
+NV,Cluster12,644,0
+Cluster121,2095,19,21,20,0.904761904762,0.95
+```
+
+NV in the first column indicates that no variants were expected because this was a single strain reference, then the 2nd column gives the cluster name, the third column the species id and the 4th column the number of variants actually detected.
+Cluster","Strain","TP","A","P","Recall","Precn")
+
+When strains are present the format is slightly different:
+1. Cluster id
+2. Species id 
+3. True positives, variants correctly predicted
+4. Actual no. 
+4. No. predicted, TP + FP
+5. Recall
+6. Precision
+
+
+
+
+
 
 ## Assign genes to genomes
 
