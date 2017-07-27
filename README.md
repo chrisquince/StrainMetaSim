@@ -678,9 +678,21 @@ When strains are present the format is slightly different:
 6. Precision
 
 
+## Validate haplotype prediction
 
+We begin by selecting clusters which are expected to have variants i.e. map to species with multiple strains:
 
+```
+grep -v "NV," VarResults.csv > VarResults_V.csv
+```
 
+```
+$METASIMPATH/scripts/ValidateStrains.sh > ValidateStrains.csv
+```
+
+```
+$METASIMPATH/scripts/CompareTau.sh > CompareTau.csv
+```
 
 ## Assign genes to genomes
 
