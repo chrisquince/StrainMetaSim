@@ -161,7 +161,8 @@ You can then proceed with the rest of the analysis below.
 
 ## Running DESMAN on the complex mock
 
-This assumes that DESMAN and CONCOCT are installed and their paths 
+We now describe how to perform a complete analysis binning and resolving strains on 
+this synthetic community. Some of these steps are time consuming so we provide the option to download the output instead. This assumes that DESMAN and CONCOCT are installed and their paths 
 set to the variables DESMAN and CONCOCT respectively e.g. (changing paths to your 
 system set-up):
 
@@ -193,6 +194,12 @@ cd Assembly
 python $CONCOCT/scripts/cut_up_fasta.py -c 10000 -o 0 -m final.contigs.fa > final_contigs_c10K.fa
 bwa index final_contigs_c10K.fa
 cd ..
+```
+
+If you do not have time to run the assembly the results can be downloaded here:
+```
+wget https://complexmockresults.s3.climb.ac.uk/Assembly.tar.gz
+tar -xvzf Assembly.tar.gz
 ```
 
 ### Mapping
@@ -310,6 +317,15 @@ This should result in 70-75 clusters with 75% single copy copy SCGs:
 ```
 python $CONCOCT/scripts/COG_table.py -b ../Annotate/final_contigs_gt1000_c10K.out  -m $CONCOCT/scgs/scg_cogs_min0.97_max1.03_unique_genera.txt -c clustering_refine.csv  --cdd_cog_file $CONCOCT/scgs/cdd_to_cog.tsv > clustering_refine_scg.tsv
 ```
+
+If the above fails or time prevents you from then the CONCOCT results can be downloaded directly:
+
+```
+wget https://complexmockresults.s3.climb.ac.uk/Concoct_Res.tar.gz
+tar -xvzf Concoct_Res.tar.gz 
+mv Concoct_Res Concoct
+```
+
 
 ### Get nucleotide frequencies on target bins
 
@@ -445,6 +461,13 @@ do
 done < Concoct/Cluster75.txt 
 ``` 
 
+The results of all the above analysis the nucleotide frequencies on core genes in each cluster can be downloaded if the above fails and you can proceed to the variant detection:
+
+```
+wget https://complexmockresults.s3.climb.ac.uk/Variants.tar.gz
+tar -xvzf Variants.tar.gz
+```
+
 ### Variant detection
 
 The first step of DESMAN is to find variant positions on the single-copy core genes. This is done using the Variant_Filter.py script. We run this for each cluster in parallel below adapt this to your machines capabilities:
@@ -511,8 +534,15 @@ do
 done
 ```
 
+If you fail to run the above variant detection and haplotype resolution then the 
+results can be downloaded from here:
 
-# Validation of results
+```
+wget https://complexmockresults.s3.climb.ac.uk/SCG_Analysis.tar.gz
+tar -xvzf SCG_Analysis.tar.gz
+```
+
+# Validation of variant and haplotype detection results
 
 ## Assign contigs to genomes
 
@@ -581,6 +611,12 @@ Run the following R comands:
 >q()
 ```
 
+The above processing can also be downloaded to save time:
+```
+wget https://complexmockresults.s3.climb.ac.uk/SCG_Analysis.tar.gz
+tar -xvzf SCG_Analysis.tar.gz
+```
+
 We are now going to create for each species that maps onto a cluster what the expected variants should be from the genomes themselves. We move to the directory two up in the hierarchy *../StrainMetaSim/ComplexStrainSim/Strains*:
 
 ```
@@ -604,8 +640,46 @@ $METASIMPATH/scripts/ReverseStrand.sh
 
 Then we run some additional cleaning scripts, removing cogs that have been filtered at the median coverage step and testing that strains are indeed different:
 ```
-
+$METASIMPATH/FilterTau.sh
+$METASIMPATH/Degenerate.sh
 ```
+
+Then we can move back to the DESMAN scg results directory and compare the predicted variants for each cluster with the references:
+```
+cp ClusterSpecies.txt $METASIMPATHWD/SCG_Analysis
+cd $METASIMPATHWD/SCG_Analysis
+sed -i '1d' ClusterSpecies.txt
+$METASIMPATH/scripts/VarResults.sh > VarResults.csv
+```
+The above file gives the number of variants that should have been and were detected in each cluster given its mapping to a reference species:
+```
+NV,Cluster0,1613,0
+NV,Cluster107,28025,0
+Cluster108,1744,55,65,57,0.846153846154,0.964912280702
+NV,Cluster109,316,3
+NV,Cluster111,168695,3
+Cluster112,1681,134,169,146,0.792899408284,0.917808219178
+NV,Cluster116,366648,0
+NV,Cluster117,1718,0
+NV,Cluster12,644,0
+Cluster121,2095,19,21,20,0.904761904762,0.95
+```
+
+NV in the first column indicates that no variants were expected because this was a single strain reference, then the 2nd column gives the cluster name, the third column the species id and the 4th column the number of variants actually detected.
+Cluster","Strain","TP","A","P","Recall","Precn")
+
+When strains are present the format is slightly different:
+1. Cluster id
+2. Species id 
+3. True positives, variants correctly predicted
+4. Actual no. 
+4. No. predicted, TP + FP
+5. Recall
+6. Precision
+
+
+
+
 
 
 ## Assign genes to genomes
