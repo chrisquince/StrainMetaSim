@@ -678,6 +678,41 @@ When strains are present the format is slightly different:
 6. Precision
 
 
+## Get core gene sequence
+
+Go to haplotype analysis directory:
+```
+cd $METASIMPATHWD
+mkdir CoreFasta
+cd CoreFasta
+```
+
+Then run the following bash script:
+```
+
+while IFS=, read cluster strain G H R acc prediction
+do
+    stub=${prediction%Filtered_Tau_star.csv}
+
+    SEL_RUN=$METASIMPATHWD/SCG_Analysis/${cluster}_scg/${stub}
+    mkdir ${cluster}
+    cd ${cluster}
+
+    cut -d"," -f 1 < $METASIMPATHWD/SCG_Analysis/${cluster}_scg/${cluster}_scgcogf.csv | sort | uniq | sed '1d' > coregenes.txt
+    
+    python $DESMAN/scripts/GetVariantsCore.py $METASIMPATHWD/Annotate/final_contigs_gt1000_c10K.fa $METASIMPATHWD/Split/${cluster}/${cluster}_core.cogs $SEL_RUN/Filtered_Tau_star.csv coregenes.txt -o ${
+cluster} 
+
+    cd ..
+
+done < ../ValidateStrains.csv
+```
+
+It will generate haplotype sequences for each gene in each directory. If you need reversed cogs in the 5-3' direction for constructing phylogenies with references use the '-r' flag.
+
+
+
+
 ## Validate haplotype prediction
 
 We begin by selecting clusters which are expected to have variants i.e. map to species with multiple strains:
