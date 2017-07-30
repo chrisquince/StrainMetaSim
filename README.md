@@ -326,6 +326,11 @@ tar -xvzf Concoct_Res.tar.gz
 mv Concoct_Res Concoct
 ```
 
+As can the annotation of contigs:
+```
+wget https://complexmockresults.s3.climb.ac.uk/Annotate.tar.gz
+tar -xvzf Annotate.tar.gz
+```
 
 ### Get nucleotide frequencies on target bins
 
