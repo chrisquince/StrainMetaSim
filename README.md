@@ -223,14 +223,14 @@ done
 
 And calculate coverages:
 ```
-python ~/bin/Lengths.py -i Assembly/final_contigs_c10K.fa | tr " " "\t" > Assembly/Lengths.txt
+python $DESMAN/scripts/LengthsT.py -i Assembly/final_contigs_c10K.fa | tr " " "\t" > Assembly/Lengths.txt
 
 for file in Map/*.sam
 do
     stub=${file%.sam}
     stub2=${stub#Map\/}
     echo $stub  
-    (samtools view -h -b -S $file > ${stub}.bam; samtools view -b -F 4 ${stub}.bam > ${stub}.mapped.bam; samtools sort -m 1000000000 ${stub}.mapped.bam -o ${stub}.mapped.sorted.bam; bedtools genomecov - ibam ${stub}.mapped.sorted.bam -g Assembly/Lengths.txt > ${stub}_cov.txt)&
+    (samtools view -h -b -S $file > ${stub}.bam; samtools view -b -F 4 ${stub}.bam > ${stub}.mapped.bam; samtools sort -m 1000000000 ${stub}.mapped.bam -o ${stub}.mapped.sorted.bam; bedtools genomecov -ibam ${stub}.mapped.sorted.bam -g Assembly/Lengths.txt > ${stub}_cov.txt)&
 done
 ```
 
