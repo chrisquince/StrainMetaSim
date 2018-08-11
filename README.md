@@ -131,7 +131,7 @@ mv *tmp Genomes
 ### Downloading reads (alternative step to above)
 
 If you cannot get the above simulation to work or just want to go ahead with the DESMAN 
-example then all the reads are downloadable from the URLs contained in this file [read urls](Results/complexmock.txt). Create a directory structure as above if you have not already i.e. starting from the repo dir: 
+example then all the reads are downloadable from the URLs contained in this file [read urls](complexmock.txt). Create a directory structure as above if you have not already i.e. starting from the repo dir: 
 ```
 cd  $METASIMPATH
 mkdir -p ComplexStrainSim/Strains/Simulation
